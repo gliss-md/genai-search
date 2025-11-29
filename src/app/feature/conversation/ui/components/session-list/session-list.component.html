@@ -1,12 +1,17 @@
 <section>
   <a class="conversation-link" [routerLink]="''">
     <div class="new">
-      <img ngSrc="add.svg" width="15" height="15" alt="Add" class="add-icon" >
+      <img ngSrc="add.svg" width="15" height="15" alt="Add" class="add-icon">
       Start new
     </div>
   </a>
   <br>
-  @for (conversation of conversations; track conversation.id) {
-    <a class="conversation-link" [routerLink]="'/' + conversation.id">{{ conversation.title }}</a>
+  @for (conversation of conversations(); track conversation.id) {
+    <a class="conversation-link" [routerLink]="'/' + conversation.id">
+      <img ngSrc="del.svg" width="15" height="15" alt="Delete" class="delete-icon"
+           (click)="deleteConversation(conversation.id)">
+      {{ conversation.title }}
+    </a>
+
   }
 </section>

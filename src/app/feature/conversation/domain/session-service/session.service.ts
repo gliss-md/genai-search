@@ -17,7 +17,7 @@ export class SessionService {
   }
 
   public getConversation(conversationId: ConversationId): Conversation | undefined {
-    return this.getAllConversations().find((c) => c.id === conversationId);
+    return this.allConversations().find((c) => c.id === conversationId);
   }
 
   public getConversationFromState(conversationId: ConversationId): Conversation | null {
@@ -46,6 +46,16 @@ export class SessionService {
       existingIndex === -1
         ? [...allConversations, conversation]
         : replaceAt(allConversations, existingIndex, conversation);
+    localStorage.setItem(
+      CONVERSATION_SESSION_LOCAL_STORAGE_KEY,
+      JSON.stringify(updatedConversationList),
+    );
+    this.allConversations.set(updatedConversationList);
+  }
+
+  public deleteConversation(conversationId: ConversationId): void {
+    const allConversations = this.allConversations();
+    const updatedConversationList = allConversations.filter((c) => c.id !== conversationId);
     localStorage.setItem(
       CONVERSATION_SESSION_LOCAL_STORAGE_KEY,
       JSON.stringify(updatedConversationList),
