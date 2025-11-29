@@ -1,7 +1,6 @@
-import { Injectable } from '@angular/core';
-import { Conversation, ConversationId, Message } from '../types/conversation.type';
-import { replaceAt } from '../utils/array.helper';
-import { BehaviorSubject, distinctUntilChanged, map, Observable } from 'rxjs';
+import {Injectable, signal} from '@angular/core';
+import {Conversation, ConversationId, Message} from '../types/conversation.type';
+import {replaceAt} from '../utils/array.helper';
 
 const CONVERSATION_SESSION_LOCAL_STORAGE_KEY = 'CONVERSATION_SESSION_LOCAL_STORAGE_KEY';
 
@@ -9,13 +8,8 @@ const CONVERSATION_SESSION_LOCAL_STORAGE_KEY = 'CONVERSATION_SESSION_LOCAL_STORA
   providedIn: 'root',
 })
 export class SessionService {
-  private conversationState: BehaviorSubject<Conversation[]>;
-  private busyConversationIsList: BehaviorSubject<Set<ConversationId>>;
-
-  constructor() {
-    this.conversationState = new BehaviorSubject<Conversation[]>(this.getAllConversations());
-    this.busyConversationIsList = new BehaviorSubject<Set<ConversationId>>(new Set());
-  }
+  public allConversations = signal(this.getAllConversations());
+  private busyConversationIsList = signal(new Set());
 
   public getAllConversations(): Conversation[] {
     const localStorageItem = localStorage.getItem(CONVERSATION_SESSION_LOCAL_STORAGE_KEY);
@@ -26,29 +20,23 @@ export class SessionService {
     return this.getAllConversations().find((c) => c.id === conversationId);
   }
 
-  public getConversation$(conversationId: ConversationId): Observable<Conversation | null> {
-    return this.conversationState.pipe(
-      map((conversation) => conversation.find((c) => c.id === conversationId) ?? null),
-      distinctUntilChanged(),
-    );
+  public getConversationFromState(conversationId: ConversationId): Conversation | null {
+    return this.allConversations().find((conversation) => conversation.id === conversationId) ?? null;
   }
 
   public setBusy(conversationId: ConversationId, isBusy: boolean): void {
-    const currentBusySet = this.busyConversationIsList.getValue();
+    const currentBusySet = this.busyConversationIsList();
     const updatedBusySet = new Set(currentBusySet);
     if (isBusy) {
       updatedBusySet.add(conversationId);
     } else {
       updatedBusySet.delete(conversationId);
     }
-    this.busyConversationIsList.next(updatedBusySet);
+    this.busyConversationIsList.set(updatedBusySet);
   }
 
-  public isBusy(conversationId: ConversationId): Observable<boolean> {
-    return this.busyConversationIsList.pipe(
-      map((busyIdList) => busyIdList.has(conversationId)),
-      distinctUntilChanged(),
-    );
+  public isBusy(conversationId: ConversationId): boolean {
+    return this.busyConversationIsList().has(conversationId);
   }
 
   public createOrUpdateConversation(conversation: Conversation): void {
@@ -62,7 +50,7 @@ export class SessionService {
       CONVERSATION_SESSION_LOCAL_STORAGE_KEY,
       JSON.stringify(updatedConversationList),
     );
-    this.conversationState.next(updatedConversationList);
+    this.allConversations.set(updatedConversationList);
   }
 
   public addMessageToConversation(id: ConversationId, message: Message) {

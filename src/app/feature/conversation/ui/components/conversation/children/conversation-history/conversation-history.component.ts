@@ -1,7 +1,5 @@
-import { Component, DestroyRef, inject, input } from '@angular/core';
-import { ConversationId, Message } from '../../../../../domain/types/conversation.type';
-import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
-import { combineLatest, filter, mergeMap } from 'rxjs';
+import {Component, computed, inject, input} from '@angular/core';
+import { ConversationId } from '../../../../../domain/types/conversation.type';
 import { SessionService } from '../../../../../domain/session-service/session.service';
 import { NgClass } from '@angular/common';
 import { MarkdownComponent } from 'ngx-markdown';
@@ -15,20 +13,6 @@ import { MarkdownComponent } from 'ngx-markdown';
 export class ConversationHistoryComponent {
   public conversationId = input.required<ConversationId>();
   private sessionService = inject(SessionService);
-  protected messageList: Message[] = [];
-  protected displayLoading: boolean = false;
-
-  constructor(destroyRef: DestroyRef) {
-    toObservable(this.conversationId)
-      .pipe(
-        filter((id): id is ConversationId => id !== null),
-        mergeMap((conversationId) =>
-          combineLatest([this.sessionService.getConversation$(conversationId), this.sessionService.isBusy(conversationId)])) ,
-        takeUntilDestroyed(destroyRef),
-      )
-      .subscribe(([conversation, isBusy]) => {
-        this.messageList = conversation!.messageList;
-        this.displayLoading = isBusy;
-      });
-  }
+  protected messageList = computed(() => this.sessionService.getConversationFromState(this.conversationId())?.messageList ?? []);
+  protected displayLoading = computed(() => this.sessionService.isBusy(this.conversationId()));
 }

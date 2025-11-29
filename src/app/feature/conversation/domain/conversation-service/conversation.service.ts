@@ -2,7 +2,6 @@ import {DestroyRef, inject, Injectable} from '@angular/core';
 import {map, Observable, tap} from 'rxjs';
 import {asConversationId, Conversation, ConversationId} from '../types/conversation.type';
 import {SessionService} from '../session-service/session.service';
-import {HttpClient} from '@angular/common/http';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {ChatApiService} from '../../api/chat-api';
 
@@ -12,7 +11,6 @@ import {ChatApiService} from '../../api/chat-api';
 export class ConversationService {
   private sessionService = inject(SessionService);
   private chatApiService = inject(ChatApiService);
-  private httpClient = inject(HttpClient);
   public destroyRef = inject(DestroyRef);
 
   public createAgentConversation(prompt: string): Observable<ConversationId> {
