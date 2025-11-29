@@ -1,50 +1,33 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { PromptInput } from './prompt-input';
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { SpeechApiService } from './speech-api-service';
+import { signal } from '@angular/core';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 describe('PromptInput', () => {
   let component: PromptInput;
   let fixture: ComponentFixture<PromptInput>;
-  let mockSpeechRecognition: any;
-  let SpeechRecognitionConstructor: any;
+  let mockSpeechApiService: any;
 
   beforeEach(async () => {
-    // Mock SpeechRecognition instance
-    mockSpeechRecognition = {
-      continuous: false,
-      interimResults: false,
-      lang: '',
-      onstart: null,
-      onresult: null,
-      onerror: null,
-      onend: null,
-      start: vi.fn(),
-      stop: vi.fn(),
-      abort: vi.fn()
+    // Mock SpeechApiService
+    mockSpeechApiService = {
+      isListening: signal(false),
+      transcriptResult: signal(''),
+      initializeSpeechRecognition: vi.fn(),
+      enableVoice: vi.fn()
     };
-
-    // Create constructor function
-    SpeechRecognitionConstructor = function() {
-      return mockSpeechRecognition;
-    };
-
-    // Inject mock into window
-    (window as any).SpeechRecognition = SpeechRecognitionConstructor;
-    (window as any).webkitSpeechRecognition = SpeechRecognitionConstructor;
 
     await TestBed.configureTestingModule({
-      imports: [PromptInput]
+      imports: [PromptInput],
+      providers: [
+        { provide: SpeechApiService, useValue: mockSpeechApiService }
+      ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(PromptInput);
     component = fixture.componentInstance;
     fixture.detectChanges();
-  });
-
-  afterEach(() => {
-    // Clean up
-    delete (window as any).SpeechRecognition;
-    delete (window as any).webkitSpeechRecognition;
   });
 
   it('should create', () => {
@@ -55,14 +38,15 @@ describe('PromptInput', () => {
     expect(component.inputValue()).toBe('');
   });
 
-  it('should initialize with isListening as false', () => {
-    expect(component.isListening()).toBe(false);
+  it('should call initializeSpeechRecognition on construction', () => {
+    expect(mockSpeechApiService.initializeSpeechRecognition).toHaveBeenCalled();
   });
 
-  it('should initialize SpeechRecognition with correct settings', () => {
-    expect(mockSpeechRecognition.continuous).toBe(false);
-    expect(mockSpeechRecognition.interimResults).toBe(false);
-    expect(mockSpeechRecognition.lang).toBe('de-DE');
+  it('should expose isListening from SpeechApiService', () => {
+    expect(component.isListening()).toBe(false);
+
+    mockSpeechApiService.isListening.set(true);
+    expect(component.isListening()).toBe(true);
   });
 
   describe('handleInputEnter', () => {
@@ -77,6 +61,9 @@ describe('PromptInput', () => {
     });
 
     it('should clear input after emitting', () => {
+      const emitSpy = vi.fn();
+      component.onPromptSubmit.subscribe(emitSpy);
+
       component.inputValue.set('Test prompt');
       component['handleInputEnter']();
 
@@ -93,206 +80,156 @@ describe('PromptInput', () => {
       expect(emitSpy).not.toHaveBeenCalled();
     });
 
-    it('should not emit when input contains only whitespace', () => {
+    it('should not emit when input contains only spaces', () => {
       const emitSpy = vi.fn();
       component.onPromptSubmit.subscribe(emitSpy);
 
       component.inputValue.set('   ');
       component['handleInputEnter']();
 
-      // Note: Current implementation doesn't trim, so this will emit
-      // This test documents current behavior
+      // Current implementation doesn't trim, so it will emit
       expect(emitSpy).toHaveBeenCalledWith('   ');
     });
   });
 
   describe('enableVoice', () => {
-    it('should start speech recognition when not listening', () => {
+    it('should call speechApiService.enableVoice', () => {
       component.enableVoice();
 
-      expect(mockSpeechRecognition.start).toHaveBeenCalled();
+      expect(mockSpeechApiService.enableVoice).toHaveBeenCalled();
     });
 
-    it('should set isListening to true when recognition starts', () => {
+    it('should call enableVoice only once per click', () => {
       component.enableVoice();
 
-      // Simulate onstart callback
-      if (mockSpeechRecognition.onstart) {
-        mockSpeechRecognition.onstart();
-      }
-
-      expect(component.isListening()).toBe(true);
+      expect(mockSpeechApiService.enableVoice).toHaveBeenCalledTimes(1);
     });
+  });
 
-    it('should stop speech recognition when already listening', () => {
-      // Start listening first
-      component.enableVoice();
-      if (mockSpeechRecognition.onstart) {
-        mockSpeechRecognition.onstart();
-      }
-
-      // Stop listening
-      component.enableVoice();
-
-      expect(mockSpeechRecognition.stop).toHaveBeenCalled();
-    });
-
-    it('should emit input value when stopping recognition', () => {
+  describe('transcriptResult effect', () => {
+    it('should emit when transcriptResult changes to non-empty value', () => {
       const emitSpy = vi.fn();
       component.onPromptSubmit.subscribe(emitSpy);
 
-      // Start listening
-      component.enableVoice();
-      if (mockSpeechRecognition.onstart) {
-        mockSpeechRecognition.onstart();
-      }
-
-      // Set some text
-      component.inputValue.set('Recognized text');
-
-      // Stop listening
-      component.enableVoice();
+      // Trigger the effect by setting transcriptResult
+      mockSpeechApiService.transcriptResult.set('Recognized text');
+      fixture.detectChanges();
 
       expect(emitSpy).toHaveBeenCalledWith('Recognized text');
     });
 
-    it('should set isListening to false when recognition ends', () => {
-      component.enableVoice();
-      if (mockSpeechRecognition.onstart) {
-        mockSpeechRecognition.onstart();
-      }
-
-      // Simulate onend callback
-      if (mockSpeechRecognition.onend) {
-        mockSpeechRecognition.onend();
-      }
-
-      expect(component.isListening()).toBe(false);
-    });
-
-    it('should handle recognition results', () => {
-      component.enableVoice();
-
-      // Simulate successful recognition
-      const mockEvent = {
-        results: [[{ transcript: 'Hello World' }]]
-      };
-
-      if (mockSpeechRecognition.onresult) {
-        mockSpeechRecognition.onresult(mockEvent);
-      }
-
-      expect(component.inputValue()).toBe('Hello World');
-    });
-
-    it('should handle recognition errors', () => {
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-      component.enableVoice();
-      if (mockSpeechRecognition.onstart) {
-        mockSpeechRecognition.onstart();
-      }
-
-      // Simulate error
-      const mockError = { error: 'no-speech' };
-      if (mockSpeechRecognition.onerror) {
-        mockSpeechRecognition.onerror(mockError);
-      }
-
-      expect(component.isListening()).toBe(false);
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Spracherkennungsfehler:', 'no-speech');
-
-      consoleErrorSpy.mockRestore();
-    });
-
-    it('should handle start errors gracefully', () => {
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      mockSpeechRecognition.start.mockImplementation(() => {
-        throw new Error('Recognition already started');
-      });
-
-      component.enableVoice();
-
-      expect(consoleErrorSpy).toHaveBeenCalled();
-      consoleErrorSpy.mockRestore();
-    });
-  });
-
-  describe('SpeechRecognition not supported', () => {
-    it('should show alert when SpeechRecognition is not supported', () => {
-      // Mock the private property to simulate unsupported browser
-      (component as any).isSpeechRecognitionSupported = false;
-
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
-
-      component.enableVoice();
-
-      expect(alertSpy).toHaveBeenCalledWith(
-        'Spracherkennung wird von Ihrem Browser nicht unterstützt. Bitte verwenden Sie Chrome, Edge oder Safari.'
-      );
-
-      alertSpy.mockRestore();
-    });
-
-    it('should log warning when SpeechRecognition is not supported during initialization', () => {
-      // Temporarily remove SpeechRecognition
-      const originalSpeechRecognition = (window as any).SpeechRecognition;
-      const originalWebkit = (window as any).webkitSpeechRecognition;
-      delete (window as any).SpeechRecognition;
-      delete (window as any).webkitSpeechRecognition;
-
-      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
-      // Call the private initialization method directly
-      (component as any).initializeSpeechRecognition();
-
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        'Web Speech API wird von diesem Browser nicht unterstützt'
-      );
-
-      consoleWarnSpy.mockRestore();
-
-      // Restore
-      (window as any).SpeechRecognition = originalSpeechRecognition;
-      (window as any).webkitSpeechRecognition = originalWebkit;
-    });
-  });
-
-  describe('Integration tests', () => {
-    it('should complete full speech recognition flow', () => {
+    it('should not emit when transcriptResult is empty', () => {
       const emitSpy = vi.fn();
       component.onPromptSubmit.subscribe(emitSpy);
 
-      // Start recognition
-      component.enableVoice();
-      expect(mockSpeechRecognition.start).toHaveBeenCalled();
+      mockSpeechApiService.transcriptResult.set('');
+      fixture.detectChanges();
 
-      // Simulate start
-      if (mockSpeechRecognition.onstart) {
-        mockSpeechRecognition.onstart();
-      }
+      expect(emitSpy).not.toHaveBeenCalled();
+    });
+
+    it('should emit multiple times when transcriptResult changes multiple times', () => {
+      const emitSpy = vi.fn();
+      component.onPromptSubmit.subscribe(emitSpy);
+
+      mockSpeechApiService.transcriptResult.set('First text');
+      fixture.detectChanges();
+
+      mockSpeechApiService.transcriptResult.set('Second text');
+      fixture.detectChanges();
+
+      expect(emitSpy).toHaveBeenCalledTimes(2);
+      expect(emitSpy).toHaveBeenNthCalledWith(1, 'First text');
+      expect(emitSpy).toHaveBeenNthCalledWith(2, 'Second text');
+    });
+  });
+
+  describe('Integration with SpeechApiService', () => {
+    it('should reflect listening state from service', () => {
+      expect(component.isListening()).toBe(false);
+
+      // Simulate service starting recognition
+      mockSpeechApiService.isListening.set(true);
       expect(component.isListening()).toBe(true);
 
-      // Simulate result
-      const mockEvent = {
-        results: [[{ transcript: 'Test message' }]]
-      };
-      if (mockSpeechRecognition.onresult) {
-        mockSpeechRecognition.onresult(mockEvent);
-      }
-      expect(component.inputValue()).toBe('Test message');
-
-      // Stop recognition
-      component.enableVoice();
-      expect(mockSpeechRecognition.stop).toHaveBeenCalled();
-      expect(emitSpy).toHaveBeenCalledWith('Test message');
-
-      // Simulate end
-      if (mockSpeechRecognition.onend) {
-        mockSpeechRecognition.onend();
-      }
+      // Simulate service stopping recognition
+      mockSpeechApiService.isListening.set(false);
       expect(component.isListening()).toBe(false);
+    });
+
+    it('should handle complete voice input flow', () => {
+      const emitSpy = vi.fn();
+      component.onPromptSubmit.subscribe(emitSpy);
+
+      // User clicks microphone
+      component.enableVoice();
+      expect(mockSpeechApiService.enableVoice).toHaveBeenCalled();
+
+      // Service starts listening
+      mockSpeechApiService.isListening.set(true);
+      expect(component.isListening()).toBe(true);
+
+      // Service recognizes text
+      mockSpeechApiService.transcriptResult.set('Hello World');
+      fixture.detectChanges();
+
+      // Effect should emit the recognized text
+      expect(emitSpy).toHaveBeenCalledWith('Hello World');
+
+      // Service stops listening
+      mockSpeechApiService.isListening.set(false);
+      expect(component.isListening()).toBe(false);
+    });
+
+    it('should handle manual input and voice input separately', () => {
+      const emitSpy = vi.fn();
+      component.onPromptSubmit.subscribe(emitSpy);
+
+      // Manual input
+      component.inputValue.set('Manual text');
+      component['handleInputEnter']();
+      expect(emitSpy).toHaveBeenCalledWith('Manual text');
+      expect(component.inputValue()).toBe('');
+
+      // Voice input
+      mockSpeechApiService.transcriptResult.set('Voice text');
+      fixture.detectChanges();
+      expect(emitSpy).toHaveBeenCalledWith('Voice text');
+
+      expect(emitSpy).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('Edge cases', () => {
+    it('should handle rapid transcript changes', () => {
+      const emitSpy = vi.fn();
+      component.onPromptSubmit.subscribe(emitSpy);
+
+      mockSpeechApiService.transcriptResult.set('Text 1');
+      fixture.detectChanges();
+
+      mockSpeechApiService.transcriptResult.set('Text 2');
+      fixture.detectChanges();
+
+      mockSpeechApiService.transcriptResult.set('Text 3');
+      fixture.detectChanges();
+
+      expect(emitSpy).toHaveBeenCalledTimes(3);
+    });
+
+    it('should handle empty transcript followed by non-empty', () => {
+      const emitSpy = vi.fn();
+      component.onPromptSubmit.subscribe(emitSpy);
+
+      mockSpeechApiService.transcriptResult.set('');
+      fixture.detectChanges();
+      expect(emitSpy).not.toHaveBeenCalled();
+
+      mockSpeechApiService.transcriptResult.set('Now there is text');
+      fixture.detectChanges();
+      expect(emitSpy).toHaveBeenCalledWith('Now there is text');
     });
   });
 });
+
 
