@@ -6,7 +6,7 @@
     </div>
   </a>
   <br>
-  @for (conversation of sessionService.getAllConversations(); track conversation.id) {
+  @for (conversation of conversations; track conversation.id) {
     <a class="conversation-link" [routerLink]="'/' + conversation.id">{{ conversation.title }}</a>
   }
 </section>
