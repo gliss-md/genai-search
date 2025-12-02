@@ -1,5 +1,50 @@
 import {Injectable, signal} from '@angular/core';
 
+interface SpeechRecognitionEvent {
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionResultList {
+  readonly length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionResult {
+  readonly length: number;
+  item(index: number): SpeechRecognitionAlternative;
+  [index: number]: SpeechRecognitionAlternative;
+  readonly isFinal: boolean;
+}
+
+interface SpeechRecognitionAlternative {
+  readonly transcript: string;
+  readonly confidence: number;
+}
+
+interface SpeechRecognitionErrorEvent {
+  readonly error: string;
+  readonly message?: string;
+}
+
+interface SpeechRecognitionInstance {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onstart: (() => void) | null;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
+  onend: (() => void) | null;
+  start(): void;
+  stop(): void;
+  abort(): void;
+}
+
+interface WindowWithSpeechRecognition extends Window {
+  SpeechRecognition?: new () => SpeechRecognitionInstance;
+  webkitSpeechRecognition?: new () => SpeechRecognitionInstance;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -8,11 +53,12 @@ export class SpeechApiService {
   public isListening = signal(false);
   public transcriptResult = signal('');
 
-  private recognition: any;
+  private recognition: SpeechRecognitionInstance | null = null;
   private isSpeechRecognitionSupported = false;
 
   public initializeSpeechRecognition() {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const windowWithSR = window as WindowWithSpeechRecognition;
+    const SpeechRecognition = windowWithSR.SpeechRecognition || windowWithSR.webkitSpeechRecognition;
 
     if (SpeechRecognition) {
       this.isSpeechRecognitionSupported = true;
@@ -25,13 +71,13 @@ export class SpeechApiService {
         this.isListening.set(true);
       };
 
-      this.recognition.onresult = (event: any) => {
+      this.recognition.onresult = (event: SpeechRecognitionEvent) => {
         const transcript = event.results[0][0].transcript;
         console.log('Erkannter Text:', transcript);
         this.transcriptResult.set(transcript);
       };
 
-      this.recognition.onerror = (event: any) => {
+      this.recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
         console.error('Spracherkennungsfehler:', event.error);
         this.isListening.set(false);
       };
@@ -45,7 +91,7 @@ export class SpeechApiService {
   }
 
   public enableVoice() {
-    if (!this.isSpeechRecognitionSupported) {
+    if (!this.isSpeechRecognitionSupported || !this.recognition) {
       alert('Spracherkennung wird von Ihrem Browser nicht unterstützt. Bitte verwenden Sie Chrome, Edge oder Safari.');
       return;
     }

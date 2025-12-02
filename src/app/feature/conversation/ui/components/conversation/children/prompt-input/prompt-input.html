@@ -2,11 +2,16 @@
   <input
     [(ngModel)]="inputValue"
     (keyup.enter)="handleInputEnter()"
-    autofocus type="text"
+    type="text"
     [class.listening]="isListening()"
-         placeholder="Ask me anything..."/>
-  <img ngSrc="micro.svg" width="45" height="45" alt="Voice Input"
+    placeholder="Ask me anything..."/>
+  <img ngSrc="micro.svg"
+       width="45"
+       height="45"
+       alt="Voice Input"
        [class.listening]="isListening()"
        class="micro-icon"
+       tabindex="0"
+       (keydown.enter)="enableVoice()"
        (click)="enableVoice()">
 </div>

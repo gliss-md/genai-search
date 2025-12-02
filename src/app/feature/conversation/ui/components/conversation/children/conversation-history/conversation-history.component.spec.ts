@@ -7,7 +7,7 @@ import { vi } from 'vitest';
 describe('ConversationHistory', () => {
   let component: ConversationHistoryComponent;
   let fixture: ComponentFixture<ConversationHistoryComponent>;
-  let mockSessionService: any;
+  let mockSessionService: Partial<SessionService>;
 
   beforeEach(async () => {
     mockSessionService = {

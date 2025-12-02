@@ -1,11 +1,39 @@
 import { TestBed } from '@angular/core/testing';
 import { SpeechApiService } from './speech-api-service';
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach, afterEach, Mock } from 'vitest';
+
+interface MockSpeechRecognition {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onstart: (() => void) | null;
+  onresult: ((event: SpeechRecognitionResultEvent) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
+  onend: (() => void) | null;
+  start: Mock;
+  stop: Mock;
+  abort: Mock;
+}
+
+interface SpeechRecognitionResultEvent {
+  results: { transcript: string }[][];
+}
+
+interface SpeechRecognitionErrorEvent {
+  error: string;
+}
+
+interface WindowWithSpeechRecognition extends Window {
+  SpeechRecognition?: new () => MockSpeechRecognition;
+  webkitSpeechRecognition?: new () => MockSpeechRecognition;
+}
+
+declare const window: WindowWithSpeechRecognition;
 
 describe('SpeechApiService', () => {
   let service: SpeechApiService;
-  let mockSpeechRecognition: any;
-  let SpeechRecognitionConstructor: any;
+  let mockSpeechRecognition: MockSpeechRecognition;
+  let SpeechRecognitionConstructor: () => MockSpeechRecognition;
 
   beforeEach(() => {
     // Mock SpeechRecognition instance
@@ -28,8 +56,8 @@ describe('SpeechApiService', () => {
     };
 
     // Inject mock into window
-    (window as any).SpeechRecognition = SpeechRecognitionConstructor;
-    (window as any).webkitSpeechRecognition = SpeechRecognitionConstructor;
+    window.SpeechRecognition = SpeechRecognitionConstructor as unknown as new () => MockSpeechRecognition;
+    window.webkitSpeechRecognition = SpeechRecognitionConstructor as unknown as new () => MockSpeechRecognition;
 
     TestBed.configureTestingModule({});
     service = TestBed.inject(SpeechApiService);
@@ -37,8 +65,8 @@ describe('SpeechApiService', () => {
 
   afterEach(() => {
     // Clean up
-    delete (window as any).SpeechRecognition;
-    delete (window as any).webkitSpeechRecognition;
+    delete window.SpeechRecognition;
+    delete window.webkitSpeechRecognition;
   });
 
   it('should be created', () => {
@@ -87,7 +115,9 @@ describe('SpeechApiService', () => {
     });
 
     it('should log the recognized text', () => {
-      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {
+        // Mock implementation - do nothing
+      });
       const mockEvent = {
         results: [[{ transcript: 'Test Text' }]]
       };
@@ -116,7 +146,9 @@ describe('SpeechApiService', () => {
     });
 
     it('should handle recognition errors', () => {
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {
+        // Mock implementation - do nothing
+      });
 
       // Start recognition
       if (mockSpeechRecognition.onstart) {
@@ -136,7 +168,9 @@ describe('SpeechApiService', () => {
     });
 
     it('should handle no-speech error', () => {
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {
+        // Mock implementation - do nothing
+      });
 
       if (mockSpeechRecognition.onstart) {
         mockSpeechRecognition.onstart();
@@ -156,12 +190,14 @@ describe('SpeechApiService', () => {
   describe('initializeSpeechRecognition - not supported', () => {
     it('should log warning when SpeechRecognition is not supported', () => {
       // Remove SpeechRecognition
-      const originalSpeechRecognition = (window as any).SpeechRecognition;
-      const originalWebkit = (window as any).webkitSpeechRecognition;
-      delete (window as any).SpeechRecognition;
-      delete (window as any).webkitSpeechRecognition;
+      const originalSpeechRecognition = window.SpeechRecognition;
+      const originalWebkit = window.webkitSpeechRecognition;
+      delete window.SpeechRecognition;
+      delete window.webkitSpeechRecognition;
 
-      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {
+        // Mock implementation - do nothing
+      });
 
       service.initializeSpeechRecognition();
 
@@ -172,8 +208,8 @@ describe('SpeechApiService', () => {
       consoleWarnSpy.mockRestore();
 
       // Restore
-      (window as any).SpeechRecognition = originalSpeechRecognition;
-      (window as any).webkitSpeechRecognition = originalWebkit;
+      window.SpeechRecognition = originalSpeechRecognition;
+      window.webkitSpeechRecognition = originalWebkit;
     });
   });
 
@@ -203,7 +239,9 @@ describe('SpeechApiService', () => {
     });
 
     it('should handle start errors gracefully', () => {
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {
+        // Mock implementation - do nothing
+      });
       mockSpeechRecognition.start.mockImplementation(() => {
         throw new Error('Recognition already started');
       });
@@ -219,9 +257,11 @@ describe('SpeechApiService', () => {
 
     it('should show alert when SpeechRecognition is not supported', () => {
       // Set service as unsupported
-      (service as any).isSpeechRecognitionSupported = false;
+      Reflect.set(service, 'isSpeechRecognitionSupported', false);
 
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {
+        // Mock implementation - do nothing
+      });
 
       service.enableVoice();
 
@@ -233,8 +273,10 @@ describe('SpeechApiService', () => {
     });
 
     it('should not start recognition when not supported', () => {
-      (service as any).isSpeechRecognitionSupported = false;
-      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+      Reflect.set(service, 'isSpeechRecognitionSupported', false);
+      const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {
+        // Mock implementation - do nothing
+      });
 
       service.enableVoice();
 

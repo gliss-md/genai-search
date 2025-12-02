@@ -6,7 +6,7 @@ import { vi } from 'vitest';
 describe('ConversationService', () => {
   let component: ConversationComponent;
   let fixture: ComponentFixture<ConversationComponent>;
-  let mockConversationService: any;
+  let mockConversationService: Partial<ConversationService>;
 
   beforeEach(async () => {
     mockConversationService = {

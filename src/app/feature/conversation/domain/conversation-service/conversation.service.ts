@@ -46,7 +46,7 @@ export class ConversationService {
       tap((response) => {
         this.sessionService.addMessageToConversation(conversationId, {
           createdBy: 'ai',
-          text: (response as any)?.response ?? 'GOT NO RESPONSE',
+          text: (response as {response: string})?.response ?? 'GOT NO RESPONSE',
         });
       }),
       tap(() => this.sessionService.setBusy(conversationId, false))

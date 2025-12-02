@@ -1,13 +1,20 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { PromptInput } from './prompt-input';
 import { SpeechApiService } from './speech-api-service';
-import { signal } from '@angular/core';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { signal, WritableSignal } from '@angular/core';
+import { vi, describe, it, expect, beforeEach, Mock } from 'vitest';
+
+interface MockSpeechApiService {
+  isListening: WritableSignal<boolean>;
+  transcriptResult: WritableSignal<string>;
+  initializeSpeechRecognition: Mock;
+  enableVoice: Mock;
+}
 
 describe('PromptInput', () => {
   let component: PromptInput;
   let fixture: ComponentFixture<PromptInput>;
-  let mockSpeechApiService: any;
+  let mockSpeechApiService: MockSpeechApiService;
 
   beforeEach(async () => {
     // Mock SpeechApiService
@@ -52,7 +59,7 @@ describe('PromptInput', () => {
   describe('handleInputEnter', () => {
     it('should emit prompt when input has value', () => {
       const emitSpy = vi.fn();
-      component.onPromptSubmit.subscribe(emitSpy);
+      component.promptSubmit.subscribe(emitSpy);
 
       component.inputValue.set('Test prompt');
       component['handleInputEnter']();
@@ -62,7 +69,7 @@ describe('PromptInput', () => {
 
     it('should clear input after emitting', () => {
       const emitSpy = vi.fn();
-      component.onPromptSubmit.subscribe(emitSpy);
+      component.promptSubmit.subscribe(emitSpy);
 
       component.inputValue.set('Test prompt');
       component['handleInputEnter']();
@@ -72,7 +79,7 @@ describe('PromptInput', () => {
 
     it('should not emit when input is empty', () => {
       const emitSpy = vi.fn();
-      component.onPromptSubmit.subscribe(emitSpy);
+      component.promptSubmit.subscribe(emitSpy);
 
       component.inputValue.set('');
       component['handleInputEnter']();
@@ -82,7 +89,7 @@ describe('PromptInput', () => {
 
     it('should not emit when input contains only spaces', () => {
       const emitSpy = vi.fn();
-      component.onPromptSubmit.subscribe(emitSpy);
+      component.promptSubmit.subscribe(emitSpy);
 
       component.inputValue.set('   ');
       component['handleInputEnter']();
@@ -109,7 +116,7 @@ describe('PromptInput', () => {
   describe('transcriptResult effect', () => {
     it('should emit when transcriptResult changes to non-empty value', () => {
       const emitSpy = vi.fn();
-      component.onPromptSubmit.subscribe(emitSpy);
+      component.promptSubmit.subscribe(emitSpy);
 
       // Trigger the effect by setting transcriptResult
       mockSpeechApiService.transcriptResult.set('Recognized text');
@@ -120,7 +127,7 @@ describe('PromptInput', () => {
 
     it('should not emit when transcriptResult is empty', () => {
       const emitSpy = vi.fn();
-      component.onPromptSubmit.subscribe(emitSpy);
+      component.promptSubmit.subscribe(emitSpy);
 
       mockSpeechApiService.transcriptResult.set('');
       fixture.detectChanges();
@@ -130,7 +137,7 @@ describe('PromptInput', () => {
 
     it('should emit multiple times when transcriptResult changes multiple times', () => {
       const emitSpy = vi.fn();
-      component.onPromptSubmit.subscribe(emitSpy);
+      component.promptSubmit.subscribe(emitSpy);
 
       mockSpeechApiService.transcriptResult.set('First text');
       fixture.detectChanges();
@@ -159,7 +166,7 @@ describe('PromptInput', () => {
 
     it('should handle complete voice input flow', () => {
       const emitSpy = vi.fn();
-      component.onPromptSubmit.subscribe(emitSpy);
+      component.promptSubmit.subscribe(emitSpy);
 
       // User clicks microphone
       component.enableVoice();
@@ -183,7 +190,7 @@ describe('PromptInput', () => {
 
     it('should handle manual input and voice input separately', () => {
       const emitSpy = vi.fn();
-      component.onPromptSubmit.subscribe(emitSpy);
+      component.promptSubmit.subscribe(emitSpy);
 
       // Manual input
       component.inputValue.set('Manual text');
@@ -203,7 +210,7 @@ describe('PromptInput', () => {
   describe('Edge cases', () => {
     it('should handle rapid transcript changes', () => {
       const emitSpy = vi.fn();
-      component.onPromptSubmit.subscribe(emitSpy);
+      component.promptSubmit.subscribe(emitSpy);
 
       mockSpeechApiService.transcriptResult.set('Text 1');
       fixture.detectChanges();
@@ -219,7 +226,7 @@ describe('PromptInput', () => {
 
     it('should handle empty transcript followed by non-empty', () => {
       const emitSpy = vi.fn();
-      component.onPromptSubmit.subscribe(emitSpy);
+      component.promptSubmit.subscribe(emitSpy);
 
       mockSpeechApiService.transcriptResult.set('');
       fixture.detectChanges();

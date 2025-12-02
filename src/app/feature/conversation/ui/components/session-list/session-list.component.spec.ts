@@ -2,16 +2,27 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { SessionListComponent } from './session-list.component';
 import { SessionService } from '../../../domain/session-service/session.service';
 import { ActivatedRoute } from '@angular/router';
-import { signal } from '@angular/core';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { asConversationId } from '../../../domain/types/conversation.type';
+import { signal, WritableSignal } from '@angular/core';
+import { vi, describe, it, expect, beforeEach, Mock } from 'vitest';
+import { asConversationId, Conversation } from '../../../domain/types/conversation.type';
+
+interface MockSessionService {
+  allConversations: WritableSignal<Conversation[]>;
+  deleteConversation: Mock;
+}
+
+interface MockActivatedRoute {
+  snapshot: {
+    params: Record<string, unknown>;
+  };
+}
 
 describe('SessionList', () => {
   let component: SessionListComponent;
   let fixture: ComponentFixture<SessionListComponent>;
-  let mockSessionService: any;
-  let mockActivatedRoute: any;
-  let conversationsSignal: any;
+  let mockSessionService: MockSessionService;
+  let mockActivatedRoute: MockActivatedRoute;
+  let conversationsSignal: WritableSignal<Conversation[]>;
 
   beforeEach(async () => {
     // Create a signal for conversations

@@ -9,6 +9,8 @@
   @for (conversation of conversations(); track conversation.id) {
     <a class="conversation-link" [routerLink]="'/' + conversation.id">
       <img ngSrc="del.svg" width="15" height="15" alt="Delete" class="delete-icon"
+           tabindex="0"
+           (keyup.enter)="deleteConversation(conversation.id)"
            (click)="deleteConversation(conversation.id)">
       {{ conversation.title }}
     </a>
