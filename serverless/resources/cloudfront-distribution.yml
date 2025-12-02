@@ -7,7 +7,7 @@ Properties:
     Comment: ${self:service} by serverless
     Origins:
       - OriginAccessControlId: ${param:originAccessControlId}
-        DomainName: ${self:service}-${self:provider.stage}-prototype.s3.eu-central-1.amazonaws.com
+        DomainName: ${self:service}-${self:provider.stage}-prototype
         Id: ${self:service}-${self:provider.stage}
         S3OriginConfig:
           OriginAccessIdentity:
