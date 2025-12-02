@@ -1,18 +1,22 @@
 Type: AWS::CloudFront::Distribution
 Properties:
-# Einstellungen für die Distribution - die einzelnen Blöcke spiegeln in etwa den Tags im AWS-Webinterface wieder
-# Eine gute Übersicht über die einzelnen Einstellungen findet sich in der AWS-Cloudformation-Doku
+  # Einstellungen für die Distribution - die einzelnen Blöcke spiegeln in etwa den Tags im AWS-Webinterface wieder
+  # Eine gute Übersicht über die einzelnen Einstellungen findet sich in der AWS-Cloudformation-Doku
   DistributionConfig:
     Enabled: true
     Comment: genAi prototype by serverless-infra
     # SPA Entry Point - wird beim Aufruf der Root-URL geladen
     DefaultRootObject: index.html
     Origins:
+      - DomainName: !GetAtt StaticSite.DomainName
       - OriginAccessControlId: EMG08YO2KH1LQ
-        DomainName: genai-${self:provider.stage}-prototype.s3.eu-central-1.amazonaws.com
         Id: ${self:service}-${self:provider.stage}
-        S3OriginConfig:
-          OriginAccessIdentity:
+        CustomOriginConfig:
+          HTTPPort: 80
+          HTTPSPort: 443
+          OriginProtocolPolicy: http-only
+          OriginSSLProtocols:
+            - TLSv1.2
 
     DefaultCacheBehavior:
       # Die TargetOriginId muss mit der Id des Origins übereinstimmen
