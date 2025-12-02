@@ -1,6 +1,6 @@
 # Erste Implementierung eines Serverless Deployment Skriptes
 # Ausführlichere Kommentierung als gewohnt aus Doku-Zwecken
-service: genAi
+service: genAi-Frontend
 frameworkVersion: '4.4.18'
 
 # Der Provider-Block definiert die Cloud-Provider-spezifischen Einstellungen
@@ -8,7 +8,7 @@ frameworkVersion: '4.4.18'
 provider:
   name: aws
   runtime: nodejs20.x
-  stage: ${opt:stage}
+  stage: git
   region: ${opt:region, 'eu-central-1'}
   stackName:  ${self:service}-${self:provider.stage}
 
@@ -40,7 +40,7 @@ plugins:
 
 custom:
   s3Sync:
-    - bucketName: ${self:service}-${self:provider.stage}-website
+    - bucketName: ${self:service}-${self:provider.stage}-prototype
       localDir: dist/apps/app
       params: # optional
         - index.html:
