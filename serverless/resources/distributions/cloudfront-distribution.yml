@@ -8,15 +8,11 @@ Properties:
     # SPA Entry Point - wird beim Aufruf der Root-URL geladen
     DefaultRootObject: index.html
     Origins:
-      - DomainName: !GetAtt StaticSite.DomainName
       - OriginAccessControlId: EMG08YO2KH1LQ
+        DomainName: !GetAtt StaticSite.DomainName
         Id: ${self:service}-${self:provider.stage}
-        CustomOriginConfig:
-          HTTPPort: 80
-          HTTPSPort: 443
-          OriginProtocolPolicy: http-only
-          OriginSSLProtocols:
-            - TLSv1.2
+        S3OriginConfig:
+          OriginAccessIdentity:
 
     DefaultCacheBehavior:
       # Die TargetOriginId muss mit der Id des Origins übereinstimmen
