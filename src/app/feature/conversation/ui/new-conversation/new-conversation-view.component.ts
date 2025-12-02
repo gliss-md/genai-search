@@ -1,10 +1,11 @@
 import {Component} from '@angular/core';
-import {SessionListComponent} from '../components/session-list/session-list.component';
-import {NewConversation} from '../components/new-conversation/new-conversation';
+import {NewConversation} from '../shared/new-conversation/new-conversation';
+import {SessionListComponent} from '../shared/session-list/session-list.component';
+
 
 @Component({
   selector: 'app-new-conversation-view',
-  imports: [SessionListComponent, NewConversation, SessionListComponent, NewConversation],
+  imports: [SessionListComponent, NewConversation],
   templateUrl: './new-conversation-view.component.html',
   styleUrl: './new-conversation-view.component.scss',
 })

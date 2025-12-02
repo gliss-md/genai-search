@@ -1,11 +1,11 @@
 import { Component, input } from '@angular/core';
-import {SessionListComponent} from '../components/session-list/session-list.component';
-import {ConversationComponent} from '../components/conversation/conversation.component';
 import {ConversationId} from '../../domain/types/conversation.type';
+import {ConversationComponent} from '../shared/conversation/conversation.component';
+import {SessionListComponent} from '../shared/session-list/session-list.component';
 
 @Component({
   selector: 'app-conversation-view',
-  imports: [ConversationComponent, SessionListComponent, SessionListComponent, ConversationComponent],
+  imports: [ConversationComponent, SessionListComponent],
   templateUrl: './conversation-view.component.html',
   styleUrl: './conversation-view.component.scss',
 })
