@@ -20,7 +20,7 @@ resources:
   Resources:
     StaticSite: ${file(serverless/resources/buckets/s3-bucket.yml)}
     StaticSitePolicy: ${file(serverless/resources/buckets/s3-bucket-policy.yml)}
-    CloudFrontDistributionFreenet: ${file(serverless/resources/distributions/cloudfront-distribution.yml)}
+    CloudFrontDistribution: ${file(serverless/resources/distributions/cloudfront-distribution.yml)}
 
 outputs:
   WebsiteURL:
