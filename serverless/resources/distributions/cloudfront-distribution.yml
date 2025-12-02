@@ -9,12 +9,7 @@ Properties:
       - OriginAccessControlId: EMG08YO2KH1LQ
         DomainName: !GetAtt StaticSite.DomainName
         Id: ${self:service}-${self:provider.stage}
-        CustomOriginConfig:
-          HTTPPort: 80
-          HTTPSPort: 443
-          OriginProtocolPolicy: http-only
-          OriginSSLProtocols:
-            - TLSv1.2
+
     DefaultCacheBehavior:
       TargetOriginId: ${self:service}-${self:provider.stage}
       ViewerProtocolPolicy: redirect-to-https
