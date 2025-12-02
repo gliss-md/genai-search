@@ -43,28 +43,21 @@ jobs:
         run: npm run build-production
 
       - name: Configure AWS credentials
-        if: github.ref == 'refs/heads/main'
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-central-1
-
       - name: Install Serverless Framework
-        if: github.ref == 'refs/heads/main'
         run: npm install -g serverless
-
+      - name: get SSM parameters
+        uses: dkershner6/aws-ssm-getparameters-action@v2
+        with:
+          parameterPairs: |
+            SERVERLESS_LICENSE_KEY = SERVERLESS_LICENSE_KEY
       - name: Deploy to AWS
-        if: github.ref == 'refs/heads/main'
         run: serverless deploy --region eu-central-1
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
-      - name: Invalidate CloudFront Cache
-        if: github.ref == 'refs/heads/main'
-        run: |
-          DISTRIBUTION_ID=$(aws cloudformation describe-stacks --stack-name gen-ai-search-git --query "Stacks[0].Outputs[?OutputKey=='CloudFrontDistributionId'].OutputValue" --output text --region eu-central-1)
-          echo "Distribution ID: $DISTRIBUTION_ID"
-          aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
 
