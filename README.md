@@ -44,6 +44,46 @@ To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use th
 ng test
 ```
 
+## Deployment
+
+This project uses GitHub Actions for continuous deployment to AWS via Serverless Framework.
+
+### Prerequisites
+
+1. AWS Account with appropriate permissions
+2. GitHub repository secrets configured:
+   - `AWS_ACCESS_KEY_ID`
+   - `AWS_SECRET_ACCESS_KEY`
+
+### CI/CD Pipeline
+
+The GitHub Actions workflow (`.github/workflows/deploy.yml`) automatically runs on push to `main` or `master` branch:
+
+1. **Lint** - Runs ESLint checks
+2. **Test** - Executes all unit tests with Vitest
+3. **Build** - Creates development build
+4. **Build Production** - Creates optimized production build
+5. **Deploy** - Deploys to AWS S3 via Serverless Framework (only on main/master branch)
+
+### Manual Deployment
+
+To deploy manually, ensure you have AWS credentials configured and run:
+
+```bash
+npm install
+npm run build-production
+serverless deploy --stage production --region eu-central-1
+```
+
+### Serverless Configuration
+
+The `serverless.yml` file configures:
+- S3 bucket for static hosting
+- CloudFront distribution (ID: E3PIPQD0GUBLW4)
+- Deployment to `eu-central-1` region
+
+Build output is automatically synced from `dist/gen-ai-search/browser` to S3.
+
 ## Running end-to-end tests
 
 For end-to-end (e2e) testing, run:

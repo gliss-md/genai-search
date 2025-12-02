@@ -1,0 +1,15 @@
+Type: AWS::S3::BucketPolicy
+Properties:
+  Bucket: !Ref StaticSite
+  PolicyDocument:
+    Statement:
+      - Sid: AllowCloudFrontServicePrincipal
+        Effect: Allow
+        Principal:
+          Service: cloudfront.amazonaws.com
+        Action:
+          - s3:GetObject
+        Resource: !Join ['', [!GetAtt StaticSite.Arn, '/*']]
+        Condition:
+          StringEquals:
+            "AWS:SourceArn": !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${param:distributionId}

@@ -1,0 +1,16 @@
+Type: AWS::S3::Bucket
+Properties:
+  BucketName: ${self:service}-${self:provider.stage}-prototype
+  PublicAccessBlockConfiguration:
+    BlockPublicAcls: false
+    BlockPublicPolicy: false
+    IgnorePublicAcls: false
+    RestrictPublicBuckets: false
+  Tags:
+    - Key: map-migrated
+      Value: mig8HJ3AJM0OD
+  VersioningConfiguration:
+    Status: Enabled
+  WebsiteConfiguration:
+    IndexDocument: index.html
+    ErrorDocument: index.html

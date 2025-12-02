@@ -1,0 +1,39 @@
+service: gen-ai-search
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  stage: git
+  region: ${opt:region, 'eu-central-1'}
+  stackName:  ${self:service}-${self:provider.stage}
+
+
+stages:
+  default:
+    params:
+      distributionId: E3PIPQD0GUBLW4
+
+# Der Package-Block definiert die zu deployenden Ressourcen
+# Es wurde sich dazu entschlossen, die eintzelnen Ressourcen in eigene Dateien auszulagern um Übersichtlichkeit zu bewahren.
+# Man hat in den neuen files weiterhin Zugriff auf die params etc.
+resources:
+  Resources:
+    StaticSite: ${file(serverless/resources/buckets/s3-bucket.yml)}
+    StaticSitePolicy: ${file(serverless/resources/buckets/s3-bucket-policy.yml)}
+    CloudFrontDistributionFreenet: ${file(serverless/resources/distributions/cloudfront-distribution.yml)}
+
+outputs:
+  WebsiteURL:
+    Value: !GetAtt StaticSite.WebsiteURL
+    Description: URL for the S3 website endpoint
+
+plugins:
+  - serverless-s3-sync
+
+custom:
+  s3Sync:
+    - bucketName: ${self:service}-${self:provider.stage}-prototype
+      localDir: dist/gen-ai-search/browser
+      params: # optional
+        - index.html:
+            CacheControl: 'no-cache'
