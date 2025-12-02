@@ -41,7 +41,7 @@ plugins:
 custom:
   s3Sync:
     - bucketName: ${self:service}-${self:provider.stage}-prototype
-      localDir: dist/gen-ai-search
+      localDir: dist/gen-ai-search/browser
       params: # optional
         - index.html:
             CacheControl: 'no-cache'
