@@ -9,6 +9,8 @@ Properties:
       - OriginAccessControlId: EMG08YO2KH1LQ
         DomainName: !GetAtt StaticSite.DomainName
         Id: ${self:service}-${self:provider.stage}
+        S3OriginConfig:
+          OriginAccessIdentity:
 
     DefaultCacheBehavior:
       TargetOriginId: ${self:service}-${self:provider.stage}
