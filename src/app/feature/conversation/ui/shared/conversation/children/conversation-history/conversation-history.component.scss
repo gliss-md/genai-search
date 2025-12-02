@@ -9,7 +9,7 @@ section.message-list {
     /* HTML: <div class="loader"></div> */
       width: 100px;
       height: 40px;
-      --g: radial-gradient(farthest-side,#0000 calc(95% - 3px),#fff calc(100% - 3px) 98%,#0000 101%) no-repeat;
+      --g: radial-gradient(farthest-side, transparent calc(95% - 3px), #fff calc(100% - 3px), #fff 98%, transparent 101%) no-repeat;
       background: var(--g), var(--g), var(--g);
       background-size: 20px 20px;
       animation: l9 1s infinite alternate;
