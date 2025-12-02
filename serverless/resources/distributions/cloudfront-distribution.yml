@@ -1,7 +1,5 @@
 Type: AWS::CloudFront::Distribution
 Properties:
-  # Einstellungen für die Distribution - die einzelnen Blöcke spiegeln in etwa den Tags im AWS-Webinterface wieder
-  # Eine gute Übersicht über die einzelnen Einstellungen findet sich in der AWS-Cloudformation-Doku
   DistributionConfig:
     Enabled: true
     Comment: genAi prototype by serverless-infra
@@ -11,26 +9,25 @@ Properties:
       - OriginAccessControlId: EMG08YO2KH1LQ
         DomainName: !GetAtt StaticSite.DomainName
         Id: ${self:service}-${self:provider.stage}
-        S3OriginConfig:
-          OriginAccessIdentity:
-
+        CustomOriginConfig:
+          HTTPPort: 80
+          HTTPSPort: 443
+          OriginProtocolPolicy: http-only
+          OriginSSLProtocols:
+            - TLSv1.2
     DefaultCacheBehavior:
-      # Die TargetOriginId muss mit der Id des Origins übereinstimmen
       TargetOriginId: ${self:service}-${self:provider.stage}
       ViewerProtocolPolicy: redirect-to-https
       # bzgl. der IDs siehe https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html
       CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad # Recommended caching policy
       Compress: true
-      AllowedMethods:
-        - GET
-        - HEAD
-        - OPTIONS
-      CachedMethods:
-        - GET
-        - HEAD
-
-    # CustomErrorResponses leitet alle 404/403 Fehler auf index.html um
-    # Dies ist wichtig für Angular SPA Routing (z.B. /conversation/123)
+      ForwardedValues:
+        QueryString: false
+        Cookies:
+          Forward: none
+      DefaultTTL: 86400
+      MinTTL: 0
+      MaxTTL: 31536000
     CustomErrorResponses:
       - ErrorCode: 404
         ResponseCode: 200
