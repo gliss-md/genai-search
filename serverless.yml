@@ -26,6 +26,12 @@ outputs:
   WebsiteURL:
     Value: !GetAtt StaticSite.WebsiteURL
     Description: URL for the S3 website endpoint
+  CloudFrontURL:
+    Value: !GetAtt CloudFrontDistribution.DomainName
+    Description: CloudFront distribution domain name
+  CloudFrontDistributionId:
+    Value: !Ref CloudFrontDistribution
+    Description: CloudFront distribution ID
 
 plugins:
   - serverless-s3-sync

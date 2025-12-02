@@ -12,4 +12,4 @@ Properties:
         Resource: !Join ['', [!GetAtt StaticSite.Arn, '/*']]
         Condition:
           StringEquals:
-            "AWS:SourceArn": !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${param:distributionId}
+            "AWS:SourceArn": !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}'
