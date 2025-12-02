@@ -1,45 +1,47 @@
-service: gen-ai-search
+# Erste Implementierung eines Serverless Deployment Skriptes
+# Ausführlichere Kommentierung als gewohnt aus Doku-Zwecken
+service: genAi
+frameworkVersion: '4.4.18'
 
+# Der Provider-Block definiert die Cloud-Provider-spezifischen Einstellungen
+# abgerufen werden diese Einstellungen über ${self:provider.<param-name>}
 provider:
   name: aws
   runtime: nodejs20.x
-  stage: git
+  stage: ${opt:stage}
   region: ${opt:region, 'eu-central-1'}
   stackName:  ${self:service}-${self:provider.stage}
-
 
 stages:
   default:
     params:
-      distributionId: E3PIPQD0GUBLW4
+      cloudfrontId: 875767235174
+      originAccessControlId: EMG08YO2KH1LQ
+      use_angular_spa_from_netscaler: arn:aws:cloudfront::875767235174:function/angular_spa_from_netscaler_by_serverless_infra
 
 # Der Package-Block definiert die zu deployenden Ressourcen
 # Es wurde sich dazu entschlossen, die eintzelnen Ressourcen in eigene Dateien auszulagern um Übersichtlichkeit zu bewahren.
 # Man hat in den neuen files weiterhin Zugriff auf die params etc.
 resources:
   Resources:
-    StaticSite: ${file(serverless/resources/buckets/s3-bucket.yml)}
-    StaticSitePolicy: ${file(serverless/resources/buckets/s3-bucket-policy.yml)}
-    CloudFrontDistribution: ${file(serverless/resources/distributions/cloudfront-distribution.yml)}
+    StaticSite: ${file(serverless/resources/s3-bucket.yml)}
+    StaticSitePolicy: ${file(serverless/resources/s3-bucket-policy.yml)}
+    CloudFrontDistribution: ${file(serverless/resources/cloudfront-distribution.yml)}
 
 outputs:
   WebsiteURL:
     Value: !GetAtt StaticSite.WebsiteURL
     Description: URL for the S3 website endpoint
-  CloudFrontURL:
-    Value: !GetAtt CloudFrontDistribution.DomainName
-    Description: CloudFront distribution domain name
-  CloudFrontDistributionId:
-    Value: !Ref CloudFrontDistribution
-    Description: CloudFront distribution ID
 
+# Der Plugin-Block definiert die zu verwendenden Plugins, in diesem Fall serverless-s3-sync
+# Das Plugin deployed die Angular-App in den S3-Bucket und wird im custom-Block konfiguriert
 plugins:
   - serverless-s3-sync
 
 custom:
   s3Sync:
-    - bucketName: ${self:service}-${self:provider.stage}-prototype
-      localDir: dist/gen-ai-search/browser
+    - bucketName: ${self:service}-${self:provider.stage}-website
+      localDir: dist/apps/app
       params: # optional
         - index.html:
             CacheControl: 'no-cache'

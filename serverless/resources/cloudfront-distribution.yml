@@ -1,0 +1,27 @@
+Type: AWS::CloudFront::Distribution
+Properties:
+# Einstellungen für die Distribution - die einzelnen Blöcke spiegeln in etwa den Tags im AWS-Webinterface wieder
+# Eine gute Übersicht über die einzelnen Einstellungen findet sich in der AWS-Cloudformation-Doku
+  DistributionConfig:
+    Enabled: true
+    Comment: ${self:service} by serverless
+    Origins:
+      - OriginAccessControlId: ${param:originAccessControlId}
+        DomainName: ${self:service}-${self:provider.stage}-prototype.s3.eu-central-1.amazonaws.com
+        Id: ${self:service}-${self:provider.stage}
+        S3OriginConfig:
+          OriginAccessIdentity:
+
+
+    DefaultCacheBehavior:
+      # Die TargetOriginId muss mit der Id des Origins übereinstimmen
+      TargetOriginId: ${self:service}-${self:provider.stage}
+      ViewerProtocolPolicy: redirect-to-https
+      # bzgl. der IDs siehe https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-managed-cache-policies.html
+      CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6 # Recommended caching policy
+      FunctionAssociations:
+        - EventType: viewer-request
+          FunctionARN: ${param:use_angular_spa_from_netscaler}
+  Tags:
+    - Key: map-migrated
+      Value: mig8HJ3AJM0OD

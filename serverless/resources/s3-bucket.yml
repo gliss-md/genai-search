@@ -9,8 +9,6 @@ Properties:
   Tags:
     - Key: map-migrated
       Value: mig8HJ3AJM0OD
-  VersioningConfiguration:
-    Status: Enabled
   WebsiteConfiguration:
     IndexDocument: index.html
     ErrorDocument: index.html

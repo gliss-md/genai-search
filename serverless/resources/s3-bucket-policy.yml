@@ -9,7 +9,7 @@ Properties:
           Service: cloudfront.amazonaws.com
         Action:
           - s3:GetObject
-        Resource: !Join ['', [!GetAtt StaticSite.Arn, '/*']]
+        Resource: arn:aws:s3:::${self:service}-${self:provider.stage}-prototype/*
         Condition:
           StringEquals:
-            "AWS:SourceArn": !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}'
+            "AWS:SourceArn": !Sub arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}
