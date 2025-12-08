@@ -1,0 +1,41 @@
+.form {
+  padding: 20px;
+  border-radius: 5px;
+  width: 250px ;
+  .form-group {
+    .textinput {
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      font-size: 14px;
+      font-family: sans-serif;
+      &:focus {
+        outline: none;
+        border-color: #666;
+      }
+    }
+    border: 1px solid #ccc;
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    padding: 12px;
+  }
+  .button {
+    width: 250px;
+    border: 1px solid #ccc;
+    line-height: 1.25;
+    font-family: sans-serif;
+    background: #fff;
+    color: #292929;
+    padding: 12px;
+    transition: 0.5s;
+    &:hover {
+      background: #3a3a3a;
+      color: #fff;
+      transition: 0.5s;
+    }
+  }
+}
+
