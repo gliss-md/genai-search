@@ -1,19 +1,19 @@
 <form class="form">
   <div class="form-group">
     <label for="taskName">Name</label>
-    <input type="text" id="name" class="form-control textinput"  name="name" />
+    <input type="text" id="name" class="form-control textinput" [field]="taskForm.name" />
   </div>
   <fieldset class="form-group fieldset">
-    <input type="radio" id="sum" class="form-control"  name="type"/>
+    <input type="radio" id="sum" class="form-control"  [field]="taskForm.type"/>
     <label for="sum">Summe</label>
-    <input type="radio" id="count" class="form-control"  name="type"/>
+    <input type="radio" id="count" class="form-control"  [field]="taskForm.type"/>
     <label for="count">Anzahl</label>
-    <input type="radio" id="duration" class="form-control"  name="type"/>
+    <input type="radio" id="duration" class="form-control"  [field]="taskForm.type"/>
     <label for="duration">Dauer</label>
   </fieldset>
   <div class="form-group">
     <label for="taskName">Ziel</label>
-    <input type="text" id="goal" class="form-control textinput"  name="goal" />
+    <input type="text" id="goal" class="form-control textinput"  [field]="taskForm.goal" />
   </div>
-  <button type="submit" class="button">Hinzufügen</button>
+  <button type="submit" class="button" (click)="submitTask($event)">Hinzufügen</button>
 </form>
